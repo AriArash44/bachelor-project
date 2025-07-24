@@ -3,7 +3,6 @@ import torch.nn as nn
 import argparse
 import pickle
 import pandas as pd
-import numpy as np
 
 class MHABiGRU(nn.Module):
     def __init__(self,
@@ -41,7 +40,7 @@ def main():
     parser.add_argument("--out-y-csv", required=True)
     parser.add_argument("--model-pt", required=True)
     parser.add_argument("--label-map", required=True)
-    parser.add_argument("--input-size", type=int, default=9)
+    parser.add_argument("--input-size", type=int, default=11)
     parser.add_argument("--hidden-size", type=int, default=64)
     parser.add_argument("--num-heads", type=int, default=4)
     parser.add_argument("--num-classes", type=int, default=10)

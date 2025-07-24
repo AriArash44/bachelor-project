@@ -37,7 +37,7 @@ class CorrelationDropper(BaseEstimator, TransformerMixin):
 
 def do_fit(args):
     X = pd.read_csv(args.train_x_csv)
-    y = pd.read_csv(args.train_y_csv)
+    Y = pd.read_csv(args.train_y_csv)
     pipeline = Pipeline([
         ("dropper", CorrelationDropper(threshold=args.threshold)),
         ("pca", PCA(n_components=args.pca_variance, svd_solver="full")),
@@ -49,7 +49,7 @@ def do_fit(args):
     n_pcs = pipeline.named_steps["pca"].n_components_
     cols = [f"PC{i+1}" for i in range(n_pcs)]
     df_out = pd.DataFrame(X_t, columns=cols)
-    df_out = pd.concat([df_out, y.reset_index(drop=True)], axis=1)
+    df_out = pd.concat([df_out, Y.reset_index(drop=True)], axis=1)
     df_out.to_csv(args.out_csv, index=False)
     evr = pipeline.named_steps["pca"].explained_variance_ratio_
     cum = np.cumsum(evr)
@@ -80,15 +80,15 @@ sub = p.add_subparsers(dest="mode", required=True)
 fit = sub.add_parser("fit")
 fit.add_argument("--train-x-csv", required=True)
 fit.add_argument("--train-y-csv", required=True)
-fit.add_argument("--out-csv",       default="preprocessed.csv")
-fit.add_argument("--out-pkl",       default="feature_selection.pkl")
-fit.add_argument("--plot-file",     default="pca_explained_variance.png")
-fit.add_argument("--threshold",     type=float, default=0.95)
-fit.add_argument("--pca-variance",  type=float, default=0.90)
+fit.add_argument("--out-csv", default="preprocessed.csv")
+fit.add_argument("--out-pkl", default="feature_selection.pkl")
+fit.add_argument("--plot-file", default="pca_explained_variance.png")
+fit.add_argument("--threshold", type=float, default=0.95)
+fit.add_argument("--pca-variance", type=float, default=0.90)
 tr = sub.add_parser("transform")
-tr.add_argument("--in-csv",        required=True)
-tr.add_argument("--out-x-csv",     required=True)
-tr.add_argument("--preproc-pkl",   required=True)
+tr.add_argument("--in-csv", required=True)
+tr.add_argument("--out-x-csv", required=True)
+tr.add_argument("--preproc-pkl", required=True)
 args = p.parse_args()
 if args.mode == "fit":
     do_fit(args)

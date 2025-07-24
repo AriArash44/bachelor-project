@@ -21,6 +21,11 @@ type_columns = [
     'motion_light.type', 'thermostat.type', 'weather.type'
 ]
 
+label_columns = [
+    'fridge.label', 'garage_door.label', 'gps_tracker.label', 'modbus.label',
+    'motion_light.label', 'thermostat.label', 'weather.label'
+]
+
 def extract_feature(row, columns):
     vals, keys = [], []
     for c in columns:
@@ -86,6 +91,7 @@ for i, row in sorted_df.iterrows():
 
 bucketed_df = pd.DataFrame(activity_logs)
 bucketed_df.drop(columns=type_columns, inplace=True)
+bucketed_df.drop(columns=label_columns, inplace=True)
 
 for col in time_columns:
     bucketed_df[col] = bucketed_df[col].dt.strftime("%Y-%m-%d %H:%M:%S")
