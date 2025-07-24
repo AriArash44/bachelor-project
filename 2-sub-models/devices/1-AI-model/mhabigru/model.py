@@ -3,6 +3,7 @@ import torch.nn as nn
 import argparse
 import pickle
 import pandas as pd
+import numpy as np
 
 class MHABiGRU(nn.Module):
     def __init__(self,
@@ -36,44 +37,54 @@ class MHABiGRU(nn.Module):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--in-csv",      required=True, help="Path to preprocessed features CSV")
-    parser.add_argument("--out-y-csv",   required=True, help="Output CSV for predictions")
-    parser.add_argument("--model-pt",    required=True, help="Trained PyTorch checkpoint (.pt)")
-    parser.add_argument("--label-map",   required=True, help="Pickle for label ID → label string")
-    parser.add_argument("--input-size",  type=int, default=1, help="Model input size")
-    parser.add_argument("--hidden-size", type=int, default=64, help="GRU hidden size")
-    parser.add_argument("--num-heads",   type=int, default=4, help="Attention heads")
-    parser.add_argument("--num-classes", type=int, default=8, help="Number of output classes")
+    parser.add_argument("--in-csv", required=True)
+    parser.add_argument("--out-y-csv", required=True)
+    parser.add_argument("--model-pt", required=True)
+    parser.add_argument("--label-map", required=True)
+    parser.add_argument("--input-size", type=int, default=9)
+    parser.add_argument("--hidden-size", type=int, default=64)
+    parser.add_argument("--num-heads", type=int, default=4)
+    parser.add_argument("--num-classes", type=int, default=10)
     args = parser.parse_args()
     print(">> Loading label map...")
     with open(args.label_map, "rb") as f:
-        id2label = pickle.load(f)
-    print(">> Instantiating MHABiGRU...")
+        label_encoder = pickle.load(f)
+    trained_classes = len(label_encoder.classes_)
+    id2label = {i: label_encoder.classes_[i] for i in range(trained_classes)}
+    print(f">> Trained classes: {trained_classes}, Desired output classes: {args.num_classes}")
     model = MHABiGRU(
         input_size=args.input_size,
         hidden_size=args.hidden_size,
         num_heads=args.num_heads,
-        num_classes=args.num_classes
+        num_classes=trained_classes
     )
     print(">> Loading weights from checkpoint...")
     state = torch.load(args.model_pt, map_location="cpu")
     if isinstance(state, dict) and "state_dict" in state:
-        model.load_state_dict(state["state_dict"])
-    else:
-        model.load_state_dict(state)
+        state = state["state_dict"]
+    model.load_state_dict(state)
+    if trained_classes < args.num_classes:
+        print(f">> Expanding output layer to {args.num_classes}...")
+        old_fc = model.fc
+        new_fc = nn.Linear(old_fc.in_features, args.num_classes)
+        with torch.no_grad():
+            new_fc.weight[:trained_classes] = old_fc.weight
+            new_fc.bias[:trained_classes] = old_fc.bias
+        model.fc = new_fc
     model.eval()
     print(">> Reading input CSV...")
     df_X = pd.read_csv(args.in_csv)
     X_tensor = torch.tensor(df_X.values, dtype=torch.float32)
     if X_tensor.dim() == 2:
-        X_tensor = X_tensor.unsqueeze(1) 
-    print(">> Running inference...")
+        X_tensor = X_tensor.unsqueeze(1)
+    print(">> Running inference (10-class probability output)...")
     with torch.no_grad():
         logits = model(X_tensor)
-        preds = logits.argmax(dim=1).cpu().numpy()
-    y_labels = [id2label[i] for i in preds]
-    print(f">> Saving predictions to {args.out_y_csv}")
-    pd.Series(y_labels, name="y_pred").to_csv(args.out_y_csv, index=False)
+        probs = torch.softmax(logits, dim=1).cpu().numpy()
+    col_names = [id2label.get(i, f"unused_{i}") for i in range(args.num_classes)]
+    df_probs = pd.DataFrame(probs, columns=col_names)
+    print(f">> Saving probability vectors to {args.out_y_csv}")
+    df_probs.to_csv(args.out_y_csv, index=False)
 
 if __name__ == "__main__":
     main()

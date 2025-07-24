@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import subprocess
 import argparse
 from pathlib import Path
@@ -12,8 +10,8 @@ def normalize(input_csv: str,
     cmd = [
         "py", normalizer_script,
         "transform",
-        "--in-csv",      str(input_csv),
-        "--out-x-csv",   str(out_x),
+        "--in-csv", str(input_csv),
+        "--out-x-csv", str(out_x),
         "--preproc-pkl", normalizer_pkl,
     ]
     print(">> Normalizing:\n   " + " ".join(cmd))
@@ -28,8 +26,8 @@ def feature_select(norm_csv: Path,
     cmd = [
         "py", selector_script,
         "transform",
-        "--in-csv",      str(norm_csv),
-        "--out-x-csv",   str(out_x),
+        "--in-csv", str(norm_csv),
+        "--out-x-csv", str(out_x),
         "--preproc-pkl", selector_pkl,
     ]
     print(">> Feature selecting:\n   " + " ".join(cmd))
@@ -44,10 +42,10 @@ def predict(selected_csv: Path,
     out_y = temp_dir / "2-y_pred.csv"
     cmd = [
         "py", model_script,
-        "--in-csv",      str(selected_csv),
-        "--out-y-csv",   str(out_y),
-        "--model-pt",    model_pt,
-        "--label-map",   label_map,
+        "--in-csv", str(selected_csv),
+        "--out-y-csv", str(out_y),
+        "--model-pt", model_pt,
+        "--label-map", label_map,
     ]
     print(">> Predicting Y:\n   " + " ".join(cmd))
     subprocess.run(cmd, check=True)

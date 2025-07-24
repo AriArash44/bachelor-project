@@ -10,7 +10,7 @@ from model import MHABiGRU
 class TabularSeqDataset(Dataset):
     def __init__(self, X: pd.DataFrame, y: pd.Series = None):
         self.X = torch.tensor(X.values, dtype=torch.float32)
-        self.X = self.X.unsqueeze(-1)
+        self.X = self.X.unsqueeze(1)
         self.y = None
         if y is not None:
             self.y = torch.tensor(y.values, dtype=torch.long)
@@ -30,8 +30,7 @@ def train(args):
     num_classes = len(le.classes_)
     ds = TabularSeqDataset(X, pd.Series(y_enc))
     dl = DataLoader(ds, batch_size=args.batch_size, shuffle=True)
-    seq_len = X.shape[1]
-    input_size = 1
+    input_size = X.shape[1]
     model = MHABiGRU(
         input_size=input_size,
         hidden_size=args.hidden_size,
