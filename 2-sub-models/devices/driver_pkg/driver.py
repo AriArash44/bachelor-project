@@ -40,20 +40,11 @@ def feature_select(norm_csv: Path,
     return out_x
 
 def slide_windows_with_padding(X: np.ndarray, context: int) -> np.ndarray:
-    """
-    Pad X by replicating edge rows, then extract a sliding window of length
-    seq_len = 2*context + 1 around each original row.
-    Returns an array of shape (n_samples, seq_len, n_features).
-    """
     seq_len = 2 * context + 1
-    # pad top & bottom by edge values
     X_padded = np.pad(X, ((context, context), (0, 0)), mode="edge")
-    # sliding windows via stride_tricks
     windows = np.lib.stride_tricks.sliding_window_view(
         X_padded, window_shape=(seq_len, X.shape[1])
     )
-    # Result has shape (n_padded - seq_len + 1, 1, seq_len, n_features)
-    # so we squeeze axis=1
     return windows.squeeze(1)
 
 def predict_direct(selected_csv: Path,
@@ -63,29 +54,18 @@ def predict_direct(selected_csv: Path,
                    context: int,
                    temp_dir: Path) -> Path:
     out_y = temp_dir / "2-y_pred.csv"
-
-    # 1) Load features
     df = pd.read_csv(selected_csv)
     X = df.values.astype("float32")
-
-    # 2) Build sliding windows (one window per original row)
     W = slide_windows_with_padding(X, context=context)
-
-    # 3) Load model & label encoder
     model = load_model(model_h5)
     with open(label_map, "rb") as f:
         label_encoder = pickle.load(f)
-
-    # 4) Predict
     preds = model.predict(W, batch_size=batch_size)
     class_idxs = preds.argmax(axis=1)
     labels = label_encoder.inverse_transform(class_idxs)
-
-    # 5) Save per‐row probabilities + predicted label
     probs_df = pd.DataFrame(preds, columns=label_encoder.classes_)
     probs_df["predicted"] = labels
     probs_df.to_csv(out_y, index=False)
-
     print(f">> Predictions saved to: {out_y}")
     return out_y
 
@@ -102,10 +82,14 @@ def driver_main(cli_args=None):
                         default="../0-preprocessors/3-featureSelector/featureSelector.py")
     parser.add_argument("--selector-pkl",
                         default="../0-preprocessors/3-featureSelector/feature_selection.pkl")
+    # parser.add_argument("--model-h5",
+    #                     default="../1-AI-model/mhabigru/model_tf.h5")
     parser.add_argument("--model-h5",
-                        default="../1-AI-model/mhabigru/model_tf.h5")
+                        default="../1-AI-model/rnn/simple_rnn_model.h5")
+    # parser.add_argument("--label-map",
+    #                     default="../1-AI-model/mhabigru/label_map.pkl")
     parser.add_argument("--label-map",
-                        default="../1-AI-model/mhabigru/label_map.pkl")
+                    default="../1-AI-model/rnn/label_map.pkl")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--context", type=int, default=10,
                         help="Number of past/future steps on each side")
