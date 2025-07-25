@@ -84,12 +84,16 @@ def driver_main(cli_args=None):
                         default="../0-preprocessors/3-featureSelector/feature_selection.pkl")
     # parser.add_argument("--model-h5",
     #                     default="../1-AI-model/mhabigru/model_tf.h5")
+    # parser.add_argument("--model-h5",
+    #                     default="../1-AI-model/mharnn/mharnn_model.h5")
     parser.add_argument("--model-h5",
-                        default="../1-AI-model/mharnn/mharnn_model.h5")
+                        default="../1-AI-model/bigru/bigru_tf.h5")
     # parser.add_argument("--label-map",
     #                     default="../1-AI-model/mhabigru/label_map.pkl")
+    # parser.add_argument("--label-map",
+    #                 default="../1-AI-model/mharnn/label_map.pkl")
     parser.add_argument("--label-map",
-                    default="../1-AI-model/mharnn/label_map.pkl")
+                    default="../1-AI-model/bigru/label_map.pkl")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--context", type=int, default=10,
                         help="Number of past/future steps on each side")
