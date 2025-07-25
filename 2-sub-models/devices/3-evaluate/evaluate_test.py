@@ -28,3 +28,15 @@ print(f"✅ Accuracy    : {accuracy:.4f}")
 print(f"✅ Precision   : {precision:.4f}")
 print(f"✅ F1 score    : {f1:.4f}")
 
+normal_label = "normal"
+binary_y_true = [0 if label == normal_label else 1 for label in y_true]
+binary_y_pred = [0 if label == normal_label else 1 for label in y_pred]
+
+binary_accuracy = accuracy_score(binary_y_true, binary_y_pred)
+binary_precision = precision_score(binary_y_true, binary_y_pred, average="binary", zero_division=0)
+binary_f1 = f1_score(binary_y_true, binary_y_pred, average="binary", zero_division=0)
+
+print("\n🔄 Binary Evaluation (Normal vs Attack)")
+print(f"⚡ Accuracy  : {binary_accuracy:.4f}")
+print(f"⚡ Precision : {binary_precision:.4f}")
+print(f"⚡ F1 Score  : {binary_f1:.4f}")

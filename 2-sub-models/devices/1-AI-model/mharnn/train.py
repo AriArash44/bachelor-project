@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.optimizers import Adam
-from model import build_simple_rnn  
+from model import build_mha_rnn  
 
 def create_context_windows(X, y, context):
     X_windows, y_labels = [], []
@@ -29,12 +29,13 @@ def train(args):
     W, L = create_context_windows(X_raw, y_raw, context=args.context)
     class_weights = compute_class_weights(L)
 
-    model = build_simple_rnn(
+    model = build_mha_rnn(
         seq_len=W.shape[1],
         features=W.shape[2],
         hidden_size=args.hidden_size,
         num_classes=len(np.unique(L)),
-        dropout=args.dropout
+        dropout=args.dropout,
+        num_heads=args.num_heads
     )
     model.compile(
         optimizer=Adam(args.lr),
@@ -56,7 +57,7 @@ def train(args):
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--train-csv", required=True)
-    p.add_argument("--model-out", default="simple_rnn_model.h5")
+    p.add_argument("--model-out", default="mharnn_model.h5")
     p.add_argument("--label-map", default="label_map.pkl")
     p.add_argument("--epochs", type=int, default=10)
     p.add_argument("--batch-size", type=int, default=64)
@@ -64,5 +65,6 @@ if __name__ == "__main__":
     p.add_argument("--dropout", type=float, default=0.2)
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--context", type=int, default=10)
+    p.add_argument("--num-heads", type=int, default=2)
     args = p.parse_args()
     train(args)
