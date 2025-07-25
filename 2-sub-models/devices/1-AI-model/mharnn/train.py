@@ -25,10 +25,8 @@ def train(args):
     X_raw = df.drop(columns=["type"]).values.astype("float32")
     label_encoder = LabelEncoder()
     y_raw = label_encoder.fit_transform(df["type"].values)
-
     W, L = create_context_windows(X_raw, y_raw, context=args.context)
     class_weights = compute_class_weights(L)
-
     model = build_mha_rnn(
         seq_len=W.shape[1],
         features=W.shape[2],

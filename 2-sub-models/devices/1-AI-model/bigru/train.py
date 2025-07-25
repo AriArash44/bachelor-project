@@ -25,10 +25,8 @@ def train(args):
     X_raw = df.drop(columns=["type"]).values.astype("float32")
     label_encoder = LabelEncoder()
     y_raw = label_encoder.fit_transform(df["type"].values)
-
     W, L = create_context_windows(X_raw, y_raw, context=args.context)
     class_weights = compute_class_weights(L)
-
     model = build_bigru(
         seq_len=W.shape[1],
         features=W.shape[2],
@@ -36,13 +34,11 @@ def train(args):
         num_classes=len(np.unique(L)),
         dropout=args.dropout
     )
-
     model.compile(
         optimizer=Adam(args.lr),
         loss="sparse_categorical_crossentropy",
         metrics=["accuracy"]
     )
-
     model.fit(
         W, L,
         epochs=args.epochs,
@@ -51,7 +47,6 @@ def train(args):
         class_weight=class_weights,
         verbose=1
     )
-
     model.save(args.model_out, include_optimizer=False)
     with open(args.label_map, "wb") as f:
         pickle.dump(label_encoder, f)

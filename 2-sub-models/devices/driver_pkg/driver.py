@@ -23,21 +23,21 @@ def normalize(input_csv: str,
     subprocess.run(cmd, check=True)
     return out_x
 
-# def feature_select(norm_csv: Path,
-#                    selector_script: str,
-#                    selector_pkl: str,
-#                    temp_dir: Path) -> Path:
-#     out_x = temp_dir / "1-X_preprocessed.csv"
-#     cmd = [
-#         sys.executable, selector_script,
-#         "transform",
-#         "--in-csv", str(norm_csv),
-#         "--out-x-csv", str(out_x),
-#         "--preproc-pkl", selector_pkl,
-#     ]
-#     print(">> Feature selecting:\n   " + " ".join(cmd))
-#     subprocess.run(cmd, check=True)
-#     return out_x
+def feature_select(norm_csv: Path,
+                   selector_script: str,
+                   selector_pkl: str,
+                   temp_dir: Path) -> Path:
+    out_x = temp_dir / "1-X_preprocessed.csv"
+    cmd = [
+        sys.executable, selector_script,
+        "transform",
+        "--in-csv", str(norm_csv),
+        "--out-x-csv", str(out_x),
+        "--preproc-pkl", selector_pkl,
+    ]
+    print(">> Feature selecting:\n   " + " ".join(cmd))
+    subprocess.run(cmd, check=True)
+    return out_x
 
 def slide_windows_with_padding(X: np.ndarray, context: int) -> np.ndarray:
     seq_len = 2 * context + 1
@@ -78,10 +78,10 @@ def driver_main(cli_args=None):
                         default="../0-preprocessors/2-normalizer/normalizer.py")
     parser.add_argument("--normalizer-pkl",
                         default="../0-preprocessors/2-normalizer/normalize.pkl")
-    # parser.add_argument("--selector-script",
-    #                     default="../0-preprocessors/3-featureSelector/featureSelector.py")
-    # parser.add_argument("--selector-pkl",
-    #                     default="../0-preprocessors/3-featureSelector/feature_selection.pkl")
+    parser.add_argument("--selector-script",
+                        default="../0-preprocessors/3-featureSelector/featureSelector.py")
+    parser.add_argument("--selector-pkl",
+                        default="../0-preprocessors/3-featureSelector/feature_selection.pkl")
     parser.add_argument("--model-h5",
                         default="../1-AI-model/mhabigru/model_tf.h5")
     # parser.add_argument("--model-h5",
@@ -109,14 +109,14 @@ def driver_main(cli_args=None):
         normalizer_pkl=args.normalizer_pkl,
         temp_dir=temp_dir,
     )
-    # sel_path = feature_select(
-    #     norm_csv=norm_path,
-    #     selector_script=args.selector_script,
-    #     selector_pkl=args.selector_pkl,
-    #     temp_dir=temp_dir,
-    # )
+    sel_path = feature_select(
+        norm_csv=norm_path,
+        selector_script=args.selector_script,
+        selector_pkl=args.selector_pkl,
+        temp_dir=temp_dir,
+    )
     predict_direct(
-        selected_csv=norm_path,
+        selected_csv=sel_path,
         model_h5=args.model_h5,
         label_map=args.label_map,
         batch_size=args.batch_size,

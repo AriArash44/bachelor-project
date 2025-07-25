@@ -17,7 +17,6 @@ def build_mha_rnn(seq_len, features, hidden_size, num_classes, dropout=0.2, num_
         key_dim=features,
         dropout=dropout
     )(inputs, inputs)
-
     residual = Add()([inputs, attn_output]) 
     normed = LayerNormalization()(residual)
     rnn_output = SimpleRNN(
@@ -28,5 +27,4 @@ def build_mha_rnn(seq_len, features, hidden_size, num_classes, dropout=0.2, num_
     pooled = GlobalAveragePooling1D()(rnn_output)
     dropped = Dropout(dropout)(pooled)
     output = Dense(num_classes, activation="softmax")(dropped)
-
     return Model(inputs, output)
