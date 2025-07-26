@@ -29,27 +29,26 @@ def main():
           .str.replace(r'\s+', ' ', regex=True)
           .str.lower()
     )
-    df_unique = df[['CMD']].drop_duplicates().reset_index(drop=True)
-    cmd2idx = build_vocab(df_unique['CMD'])
+    unique_cmds = df['CMD'].drop_duplicates().reset_index(drop=True)
+    cmd2idx = build_vocab(unique_cmds)
     with open(VOCAB_FILE, 'wb') as f:
         pickle.dump(cmd2idx, f)
-    df_unique['cmd_id'] = map_cmds(df_unique['CMD'], cmd2idx)
+    ids = map_cmds(unique_cmds, cmd2idx).to_numpy().reshape(-1, 1)
+    labels = ids.copy()
     vocab_size = len(cmd2idx)
-    inp = Input(shape=(1,), dtype='int32', name='cmd_id_input')
-    emb = Embedding(input_dim=vocab_size, output_dim=EMBEDDING_DIM, mask_zero=True, name='cmd_embedding')(inp)
+    inp = Input(shape=(1,), dtype='int32')
+    emb = Embedding(input_dim=vocab_size, output_dim=EMBEDDING_DIM, mask_zero=True)(inp)
     flat = Flatten()(emb)
     out = Dense(vocab_size, activation='softmax')(flat)
     clf = Model(inp, out)
     clf.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    ids = df_unique['cmd_id'].to_numpy().reshape(-1, 1)
-    labels = ids.copy()
     clf.fit(ids, labels, epochs=EPOCHS, batch_size=BATCH_SIZE, verbose=1)
-    emb_weights = clf.get_layer('cmd_embedding').get_weights()[0]
-    unique_ids = [cmd2idx[cmd] for cmd in df_unique['CMD']]
+    emb_weights = clf.get_layer(index=1).get_weights()[0]
+    unique_ids = [cmd2idx[cmd] for cmd in unique_cmds]
     emb_np_unique = emb_weights[unique_ids]
     emb_cols = [f'cmd_emb_{i}' for i in range(EMBEDDING_DIM)]
-    df_map = pd.DataFrame({col: emb_np_unique[:, i] for i, col in enumerate(emb_cols)})
-    df_map.to_csv(UNIQUE_EMB_CSV, index=False)
+    df_embs = pd.DataFrame(emb_np_unique, columns=emb_cols)
+    df_embs.to_csv(UNIQUE_EMB_CSV, index=False)
     clf.save(MODEL_FILE)
     print("✅ Unique embeddings saved to", UNIQUE_EMB_CSV)
     print("✅ Embedding model saved to", MODEL_FILE)

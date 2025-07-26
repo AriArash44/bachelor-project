@@ -4,36 +4,24 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.models import load_model
-from tensorflow.keras.layers import Layer
-import tensorflow.keras.backend as K
+import sys
+sys.path.append("../0-codebookTraining/1-VAE")
+from vaeEmbedVectors import KLDivergenceLayer, sampling
 
-VOCAB_PKL       = "../0-codebookTraining/0-embedCMD/cmd2idx.pkl"
-EMB_MODEL_H5    = "../0-codebookTraining/0-embedCMD/cmd_embedding_model_trained.h5"
+VOCAB_PKL = "../0-codebookTraining/0-embedCMD/cmd2idx.pkl"
+EMB_MODEL_H5 = "../0-codebookTraining/0-embedCMD/cmd_embedding_model_trained.h5"
 ENCODER_MU_MODEL = "../0-codebookTraining/1-VAE/encoder_z.h5"
-KMEANS_CSV      = "../0-codebookTraining/3-codebook_ordering/kmeans_centers_32_ordered.csv"
-UNK_TOKEN       = "<UNK>"
-
-@tf.keras.utils.register_keras_serializable()
-class KLDivergenceLayer(Layer):
-    def call(self, inputs):
-        mu, log_var = inputs
-        kl = -0.5 * K.sum(1 + log_var - K.square(mu) - K.exp(log_var), axis=1)
-        self.add_loss(K.mean(kl))
-        return inputs
-
-NOISE_SCALE = 0.001
-@tf.keras.utils.register_keras_serializable(name="sampling")
-def sampling(args):
-    mu, log_var = args
-    eps = K.random_normal(shape=K.shape(mu))
-    sigma = K.exp(0.5 * log_var)
-    return mu + NOISE_SCALE * sigma * eps
+KMEANS_CSV = "../0-codebookTraining/3-codebook_ordering/kmeans_centers_32_ordered.csv"
+UNK_TOKEN = "<UNK>"
 
 class CmdEncodingPipeline:
     def __init__(self, cmd2idx: dict):
         self.cmd2idx = cmd2idx
         self._emb_model = load_model(EMB_MODEL_H5)
-        self._enc_mu_model = load_model(ENCODER_MU_MODEL)
+        self._enc_mu_model = load_model(ENCODER_MU_MODEL, custom_objects={
+            "KLDivergenceLayer": KLDivergenceLayer,
+            "sampling": sampling
+        })
         self.kmeans_centers = pd.read_csv(KMEANS_CSV).values.astype(np.float32)
 
     def _safe_lookup(self, cmd: str) -> int:
@@ -47,7 +35,10 @@ class CmdEncodingPipeline:
               .values
               .reshape(-1, 1)
         )
-        emb = self._emb_model.predict(ids, verbose=0).squeeze()
+        emb_layer = self._emb_model.get_layer("embedding")
+        emb_matrix = emb_layer.get_weights()[0]
+        cmd_ids = ids.squeeze()
+        emb = emb_matrix[cmd_ids]
         mus = self._enc_mu_model.predict(emb, verbose=0)
         dists = np.sum(
             (mus[:, None, :] - self.kmeans_centers[None, :, :])**2,
