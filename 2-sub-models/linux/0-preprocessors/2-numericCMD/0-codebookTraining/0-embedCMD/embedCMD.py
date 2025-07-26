@@ -1,13 +1,15 @@
 import pandas as pd
 import numpy as np
 import tensorflow as tf
+import pickle
 from tensorflow.keras.layers import Embedding, Input
 from tensorflow.keras.models import Model
 
-def build_vocab(cmd_series, pad_token="<PAD>"):
+def build_vocab(cmd_series, pad_token="<PAD>", unk_token="<UNK>"):
     unique_cmds = cmd_series.dropna().unique().tolist()
-    cmd2idx = {cmd: idx for idx, cmd in enumerate(unique_cmds, start=1)}
+    cmd2idx = {cmd: idx for idx, cmd in enumerate(unique_cmds, start=2)}
     cmd2idx[pad_token] = 0
+    cmd2idx[unk_token] = 1
     return cmd2idx
 
 def build_embedding_model(vocab_size: int, embedding_dim: int = 64) -> Model:
@@ -21,14 +23,22 @@ def build_embedding_model(vocab_size: int, embedding_dim: int = 64) -> Model:
     model = Model(inputs=input_ids, outputs=emb_layer, name="cmd_embedding_model")
     return model
 
+def map_cmds(cmd_series, cmd2idx, unk_token="<UNK>"):
+    return cmd_series.map(lambda x: cmd2idx.get(x, cmd2idx[unk_token])).astype(int)
+
 def main():
     INPUT_CSV = "../../../1-testTrainSplitter/train_split.csv"
     OUTPUT_CSV = "cmd_embeddings_only.csv"
     MODEL_FILE = "cmd_embedding_model.h5"
+    VOCAB_FILE = "cmd2idx.pkl"
     EMBEDDING_DIM = 64
+
     df = pd.read_csv(INPUT_CSV)
     cmd2idx = build_vocab(df["CMD"])
-    df["cmd_id"] = df["CMD"].map(cmd2idx).fillna(0).astype(int)
+    with open(VOCAB_FILE, "wb") as f:
+        pickle.dump(cmd2idx, f)
+
+    df["cmd_id"] = map_cmds(df["CMD"], cmd2idx)
     vocab_size = len(cmd2idx)
     cmd_ids = df["cmd_id"].values
     emb_model = build_embedding_model(vocab_size, EMBEDDING_DIM)
@@ -39,6 +49,7 @@ def main():
     emb_model.save(MODEL_FILE)
     print(f"✅ Saved embeddings to {OUTPUT_CSV}")
     print(f"✅ Saved embedding model to {MODEL_FILE}")
+    print(f"📦 Saved cmd2idx mapping to {VOCAB_FILE}")
 
 if __name__ == "__main__":
     main()

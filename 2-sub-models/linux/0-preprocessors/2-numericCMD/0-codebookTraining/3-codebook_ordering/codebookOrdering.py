@@ -66,5 +66,6 @@ if __name__ == "__main__":
     mapping = {old: new for new, old in enumerate(linear_order)}
     df["new_index"] = df.index.map(mapping)
     df.sort_values("new_index", inplace=True)
+    df.drop(columns=["new_index"], inplace=True)
     df.to_csv(OUTPUT_CSV, index=False)
     print("✅ order codebooks saved:", OUTPUT_CSV)
