@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.cluster import KMeans
 
-INPUT_CSV = "../1-VAE/vae_latents_noisy.csv" 
+INPUT_CSV = "../1-VAE/vae_latents_z.csv" 
 N_CLUSTERS = 32
 OUTPUT_CSV = "kmeans_centers_32.csv"
 

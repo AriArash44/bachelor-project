@@ -1,24 +1,10 @@
 import pandas as pd
 import tensorflow as tf
-from tensorflow.keras.layers import Input, Dense, Lambda, Layer
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import Input, Dense, Layer
 from tensorflow.keras.models import Model
-import tensorflow.keras.backend as K
 
-INPUT_CSV = "../0-embedCMD/cmd_embeddings_only.csv"
-INPUT_DIM = 64
-LATENT_DIM = 16
-ENCODER_MU_FILE = "encoder_mu.h5"
-LATENTS_NOISY_CSV = "vae_latents_noisy.csv"
-NOISE_SCALE = 0.001
-
-X = pd.read_csv(INPUT_CSV).values.astype("float32")
-
-def sampling(args):
-    mu, log_var = args
-    eps = K.random_normal(shape=K.shape(mu))
-    sigma = K.exp(0.5 * log_var)
-    return mu + NOISE_SCALE * sigma * eps
-
+@tf.keras.utils.register_keras_serializable()
 class KLDivergenceLayer(Layer):
     def call(self, inputs):
         mu, log_var = inputs
@@ -26,34 +12,46 @@ class KLDivergenceLayer(Layer):
         self.add_loss(K.mean(kl))
         return inputs
 
-inp = Input(shape=(INPUT_DIM,), name="encoder_input")
-h = Dense(32, activation="relu")(inp)
-mu = Dense(LATENT_DIM, name="mu")(h)
-log_var = Dense(LATENT_DIM, name="log_var")(h)
-mu, log_var = KLDivergenceLayer(name="kl_divergence")([mu, log_var])
-z = Lambda(sampling, name="z")([mu, log_var])
-encoder = Model(inp, [mu, log_var, z], name="encoder")
+@tf.keras.utils.register_keras_serializable(name="sampling")
+def sampling(args):
+    mu, log_var = args
+    eps = K.random_normal(shape=K.shape(mu))
+    sigma = K.exp(0.5 * log_var)
+    return mu + NOISE_SCALE * sigma * eps
 
-z_in = Input(shape=(LATENT_DIM,), name="z_input")
-h_dec = Dense(32, activation="relu")(z_in)
-out = Dense(INPUT_DIM, activation="linear")(h_dec)
-decoder = Model(z_in, out, name="decoder")
+INPUT_CSV = "../0-embedCMD/cmd_embeddings_unique.csv"
+INPUT_DIM = 64
+LATENT_DIM = 16
+NOISE_SCALE = 0.001
+EPOCHS = 40
+BATCH_SIZE = 32
+
+X = pd.read_csv(INPUT_CSV).values.astype("float32")
+
+encoder_input = Input(shape=(INPUT_DIM,), name="encoder_input")
+h_enc = Dense(32, activation="relu")(encoder_input)
+mu = Dense(LATENT_DIM, name="mu")(h_enc)
+log_var = Dense(LATENT_DIM, name="log_var")(h_enc)
+mu, log_var = KLDivergenceLayer(name="kl")([mu, log_var])
+z = tf.keras.layers.Lambda(sampling, name="z")([mu, log_var])
+encoder = Model(encoder_input, [mu, log_var, z], name="encoder")
+
+latent_input = Input(shape=(LATENT_DIM,), name="z_input")
+h_dec = Dense(32, activation="relu")(latent_input)
+decoder_out = Dense(INPUT_DIM, activation="linear")(h_dec)
+decoder = Model(latent_input, decoder_out, name="decoder")
 
 vae_out = decoder(z)
-vae = Model(inp, vae_out, name="vae")
-vae.compile(optimizer="adam")
+vae = Model(encoder_input, vae_out, name="vae")
+vae.compile(optimizer="adam", loss="mse")
+vae.fit(X, X, epochs=EPOCHS, batch_size=BATCH_SIZE, verbose=1)
 
-vae.fit(X, epochs=40, batch_size=32, verbose=1)
+encoder_z = Model(encoder_input, z, name="encoder_z")
+encoder_z.save("encoder_z.h5")
 
-model_mu = Model(inp, mu, name="encoder_mu")
-model_mu.save(ENCODER_MU_FILE)
+z_vals = encoder_z.predict(X)
+df_z = pd.DataFrame(z_vals, columns=[f"z_{i}" for i in range(LATENT_DIM)])
+df_z.to_csv("vae_latents_z.csv", index=False)
 
-encoder_z = Model(inp, z)
-z_noisy = encoder_z.predict(X)
-pd.DataFrame(
-    z_noisy,
-    columns=[f"latent_{i}" for i in range(LATENT_DIM)]
-).to_csv(LATENTS_NOISY_CSV, index=False)
-
-print("✅ Encoder μ saved to", ENCODER_MU_FILE)
-print("✅ Noisy latents CSV saved to", LATENTS_NOISY_CSV)
+print("✅ Saved encoder_z.h5")
+print("✅ Saved vae_latents_z.csv")
