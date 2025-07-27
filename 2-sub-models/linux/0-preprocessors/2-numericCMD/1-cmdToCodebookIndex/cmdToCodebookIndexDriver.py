@@ -61,7 +61,6 @@ def main():
     tr.add_argument("--out-csv", required=True, help="output dataset file")
     tr.add_argument("--preproc-pkl", default="cmd_pipeline.pkl", help="path of pickle pipeline")
     args = p.parse_args()
-
     if args.mode == "fit":
         with open(VOCAB_PKL, "rb") as f:
             cmd2idx = pickle.load(f)
@@ -73,7 +72,6 @@ def main():
             pickle.dump(pipeline, f)
         print(f"✅ Fit complete. Transformed → {args.out_csv}")
         print(f"✅ Pipeline saved → {args.preproc_pkl}")
-
     else:
         with open(args.preproc_pkl, "rb") as f:
             pipeline = pickle.load(f)
