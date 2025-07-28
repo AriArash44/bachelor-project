@@ -48,7 +48,7 @@ class CmdEncodingPipeline:
         out = df.copy()
         out["CMD"] = nearest_idx
         return out
-
+    
 def main():
     p = argparse.ArgumentParser(description="Load vocab from pickle + Fit/Transform CMD→codebook pipeline")
     subs = p.add_subparsers(dest="mode", required=True)
