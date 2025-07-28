@@ -56,7 +56,7 @@ if __name__ == "__main__":
     p.add_argument("--train-csv", required=True)
     p.add_argument("--model-out", default="bigru_tf.h5")
     p.add_argument("--label-map", default="label_map.pkl")
-    p.add_argument("--epochs", type=int, default=50)
+    p.add_argument("--epochs", type=int, default=10)
     p.add_argument("--batch-size", type=int, default=64)
     p.add_argument("--hidden-size", type=int, default=32)
     p.add_argument("--dropout", type=float, default=0.2)

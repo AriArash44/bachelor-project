@@ -11,6 +11,7 @@ test_Y = df[["type",]].copy()
 test_X = df.drop(columns=["type",])
 
 test_X.to_csv("test_X.csv", index=False)
+test_Y.to_csv("test_Y.csv", index=False)
 
 driver_main(["test_X.csv"])
 
