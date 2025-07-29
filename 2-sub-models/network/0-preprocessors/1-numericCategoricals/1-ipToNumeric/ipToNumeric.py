@@ -27,17 +27,13 @@ def process_ip_csv_to6(input_csv_path: str) -> str:
                 nums.append(-1)
         nums += [-1] * (6 - len(nums))
         return nums
-
     for col in ["src_ip", "dst_ip"]:
         if col not in df.columns:
             continue
-
         exploded = df[col].apply(split_into_6)
         for idx in range(6):
             df[f"{col}.part{idx+1}"] = exploded.map(lambda lst: lst[idx])
-
         df.drop(columns=[col], inplace=True)
-
     output_path = "./ip_processed.csv"
     df.to_csv(output_path, index=False)
     return output_path
