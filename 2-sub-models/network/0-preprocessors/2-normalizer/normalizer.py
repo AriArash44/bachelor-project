@@ -38,47 +38,38 @@ def main():
         description="Fit or apply a 0–1 minmax scaler to a CSV dataset"
     )
     sub = p.add_subparsers(dest="mode", required=True)
-
     fit = sub.add_parser("fit", help="Fit scaler on train set and save artifacts")
-    fit.add_argument("--train-csv",   required=True, help="Input CSV for fitting")
-    fit.add_argument("--out-x-csv",   required=True, help="Where to write scaled X")
-    fit.add_argument("--out-y-csv",   required=True, help="Where to write y column")
+    fit.add_argument("--train-csv", required=True, help="Input CSV for fitting")
+    fit.add_argument("--out-x-csv", required=True, help="Where to write scaled X")
+    fit.add_argument("--out-y-csv", required=True, help="Where to write y column")
     fit.add_argument("--preproc-pkl", default="normalize.pkl",
                      help="Pickle file to save scaler + metadata")
-
     tr = sub.add_parser("transform", help="Load scaler and apply to new CSV")
-    tr.add_argument("--in-csv",       required=True, help="Input CSV to transform")
-    tr.add_argument("--out-x-csv",    required=True, help="Where to write scaled X")
-    tr.add_argument("--out-y-csv",    default=None, help="Where to write y column if present")
-    tr.add_argument("--preproc-pkl",  default="normalize.pkl",
+    tr.add_argument("--in-csv", required=True, help="Input CSV to transform")
+    tr.add_argument("--out-x-csv", required=True, help="Where to write scaled X")
+    tr.add_argument("--out-y-csv", default=None, help="Where to write y column if present")
+    tr.add_argument("--preproc-pkl", default="normalize.pkl",
                     help="Pickle file with fitted scaler + metadata")
-
     args = p.parse_args()
-
     if args.mode == "fit":
         df = pd.read_csv(args.train_csv)
         y  = df.pop("type")
         X  = df
-
         scaler, nums, cols, X_scaled = fit_pipeline(X)
         X_scaled.to_csv(args.out_x_csv, index=False)
         pd.DataFrame({"type": y}).to_csv(args.out_y_csv, index=False)
-
         with open(args.preproc_pkl, "wb") as f:
             pickle.dump({
                 "scaler":            scaler,
                 "numeric_columns":   nums,
                 "final_columns":     cols
             }, f)
-
         print(f"Fitted scaler saved to {args.preproc_pkl}")
-
     else:
         df = pd.read_csv(args.in_csv)
         has_y = "type" in df.columns
         y = df.pop("type") if has_y else None
         X = df
-
         meta = pickle.load(open(args.preproc_pkl, "rb"))
         X_scaled = transform_pipeline(
             X,
@@ -87,10 +78,8 @@ def main():
             meta["final_columns"]
         )
         X_scaled.to_csv(args.out_x_csv, index=False)
-
         if has_y and args.out_y_csv:
             pd.DataFrame({"type": y}).to_csv(args.out_y_csv, index=False)
-
         print(f"Transformed data written to {args.out_x_csv}")
 
 if __name__ == "__main__":

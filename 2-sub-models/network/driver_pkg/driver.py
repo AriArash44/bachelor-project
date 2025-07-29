@@ -63,7 +63,8 @@ def one_hot_encode_columns(
 
 def align_with_training_schema(df: pd.DataFrame, pipeline_path: Path) -> pd.DataFrame:
     with open(pipeline_path, "rb") as f:
-        scaler = pickle.load(f)
+        obj = pickle.load(f)
+    scaler = obj["scaler"] if isinstance(obj, dict) else obj
     expected_cols = scaler.feature_names_in_
     for col in expected_cols:
         if col not in df.columns:
@@ -151,7 +152,7 @@ def feature_select(norm_csv: Path,
     script = Path(script_path).resolve()
     pkl = Path(pkl_path).resolve()
     inp = norm_csv.resolve()
-    out = temp_dir / "2-X_preprocessed.csv"
+    out = temp_dir / "6-X_preprocessed.csv"
     args = [
         "transform",
         "--in-csv", str(inp),
@@ -176,7 +177,7 @@ def predict_direct(selected_csv: Path,
                    batch_size: int,
                    context: int,
                    temp_dir: Path) -> Path:
-    out_y = temp_dir / "3-y_pred.csv"
+    out_y = temp_dir / "7-y_pred.csv"
     df = pd.read_csv(selected_csv)
     X = df.values.astype("float32")
     W = slide_windows_with_padding(X, context=context)

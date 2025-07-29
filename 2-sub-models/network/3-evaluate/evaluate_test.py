@@ -15,7 +15,7 @@ test_Y.to_csv("test_Y.csv", index=False)
 
 driver_main(["test_X.csv"])
 
-predicted_df = pd.read_csv("../driver_pkg/temp_files/3-y_pred.csv")
+predicted_df = pd.read_csv("../driver_pkg/temp_files/7-y_pred.csv")
 predicted_df["predicted"] = predicted_df["predicted"]
 
 y_true = test_Y["type"].values
