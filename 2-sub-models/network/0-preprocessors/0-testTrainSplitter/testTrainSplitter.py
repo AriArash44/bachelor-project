@@ -22,8 +22,9 @@ def split_blocks(blocks, train_ratio=0.8):
     test_df = pd.concat(test_blocks).reset_index(drop=True)
     return train_df, test_df
 
-source_file = "../../../../0-datasets/netwrok/train_test_network.csv"
+source_file = "../../../../0-datasets & 1-hardware-estimate/netwrok/train_test_network.csv"
 df = pd.read_csv(source_file)
+df.drop(columns=["label"], axis=1, inplace=True)
 blocks = extract_non_overlapping_blocks(df, block_size=20)
 train_df, test_df = split_blocks(blocks, train_ratio=0.8)
 train_df.to_csv("train_split.csv", index=False)

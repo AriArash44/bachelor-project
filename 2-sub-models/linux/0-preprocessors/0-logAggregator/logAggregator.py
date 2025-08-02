@@ -2,9 +2,9 @@ import pandas as pd
 import warnings
 
 csv_files = {
-    "disk": "../../../../0-datasets/linux/Train_test_linux_disk.csv",
-    "memory": "../../../../0-datasets/linux/Train_test_linux_memory.csv",
-    "process": "../../../../0-datasets/linux/Train_Test_Linux_process.csv",
+    "disk": "../../../../0-datasets & 1-hardware-estimate/linux/Train_test_linux_disk.csv",
+    "memory": "../../../../0-datasets & 1-hardware-estimate/linux/Train_test_linux_memory.csv",
+    "process": "../../../../0-datasets & 1-hardware-estimate/linux/Train_Test_Linux_process.csv",
 }
 
 label_columns = [
@@ -128,6 +128,7 @@ bucketed_df.drop(columns=cmd_columns, inplace=True)
 bucketed_df.drop(columns=label_columns, inplace=True)
 bucketed_df.drop(columns=type_columns, inplace=True)
 bucketed_df.drop(columns=["processed"], inplace=True)
+bucketed_df.drop(columns=["label"], axis=1, inplace=True)
 
 bucketed_df.to_csv("aggregated.csv", index=False)
 

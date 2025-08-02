@@ -9,8 +9,6 @@ EXTRA_NUMERIC = ["PID", "CMD"]
 
 def normalize(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    if "label" in df.columns:
-        df.drop("label", axis=1, inplace=True)
     for pre in PREFIXES:
         cols = [c for c in df.columns if c.startswith(pre + ".")]
         df[f"{pre}_is_off"] = df[cols].isnull().all(axis=1).astype(int)
@@ -56,15 +54,15 @@ def main():
     )
     sub = p.add_subparsers(dest="mode", required=True)
     fit = sub.add_parser("fit")
-    fit.add_argument("--train-csv",  required=True)
-    fit.add_argument("--out-x-csv",  required=True)
-    fit.add_argument("--out-y-csv",  required=True)
+    fit.add_argument("--train-csv", required=True)
+    fit.add_argument("--out-x-csv", required=True)
+    fit.add_argument("--out-y-csv", required=True)
     fit.add_argument("--preproc-pkl", default="normalize.pkl")
     tr = sub.add_parser("transform")
-    tr.add_argument("--in-csv",     required=True)
-    tr.add_argument("--out-x-csv",  required=True)
+    tr.add_argument("--in-csv", required=True)
+    tr.add_argument("--out-x-csv", required=True)
     tr.add_argument("--preproc-pkl", default="normalize.pkl")
-    tr.add_argument("--out-y-csv",  default=None)
+    tr.add_argument("--out-y-csv", default=None)
     args = p.parse_args()
     if args.mode == "fit":
         df = pd.read_csv(args.train_csv)
@@ -75,9 +73,9 @@ def main():
         pd.DataFrame({"type": y}).to_csv(args.out_y_csv, index=False)
         with open(args.preproc_pkl, "wb") as f:
             pickle.dump({
-                "scaler":          scaler,
+                "scaler": scaler,
                 "numeric_columns": nums,
-                "final_columns":   cols
+                "final_columns": cols
             }, f)
     else:
         df = pd.read_csv(args.in_csv)
