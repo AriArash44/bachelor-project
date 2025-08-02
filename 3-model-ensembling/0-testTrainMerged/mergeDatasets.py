@@ -2,6 +2,20 @@ import pandas as pd
 import numpy as np
 import random
 import argparse
+from collections import Counter, defaultdict
+
+def safe_choice(bins_dict, target_label):
+    lst = bins_dict.get(target_label, [])
+    if not lst:
+        lst = bins_dict.get("normal", [])
+    return random.choice(lst)
+
+def group_windows_by_majority_label(wins, label_col):
+    bins = defaultdict(list)
+    for idx, win in enumerate(wins):
+        most_common_label = Counter(win[label_col]).most_common(1)[0][0]
+        bins[most_common_label].append(idx)
+    return bins
 
 def calculFinalLabel(devicesLabel, linuxLabel, networkLabel):
     if(devicesLabel == linuxLabel == networkLabel):
@@ -26,10 +40,10 @@ def slice_windows(df):
 
 def generate_combined_dataset(
     devices_path: str,
-    linux_path:   str,
+    linux_path: str,
     network_path: str,
-    num_windows:  int,
-    output_csv:   str
+    num_windows: int,
+    output_csv: str
 ):
     df_dev = pd.read_csv(devices_path)
     df_linux = pd.read_csv(linux_path)
@@ -38,6 +52,10 @@ def generate_combined_dataset(
     dev_wins = slice_windows(df_dev)
     linux_wins = slice_windows(df_linux)
     network_wins = slice_windows(df_network)
+
+    dev_bins = group_windows_by_majority_label(dev_wins, "type")
+    linux_bins = group_windows_by_majority_label(linux_wins, "type")
+    net_bins = group_windows_by_majority_label(network_wins, "type")
 
     max_windows = min(len(dev_wins), len(linux_wins), len(network_wins))
     if num_windows > max_windows:
@@ -64,26 +82,41 @@ def generate_combined_dataset(
 
     final_dfs = []
     for lbl in labels:
-        idx = random.randrange(max_windows)
-        sub_dev = dev_wins[idx].copy()
-        sub_lin = linux_wins[idx].copy()
-        sub_net = network_wins[idx].copy()
-        flags = {"dev":"normal", "lin":"normal", "net":"normal"}
-        for ds in pick_map[lbl]:
-            if ds == "dev":
-                flags["dev"] = lbl
-            elif ds == "lin":
-                flags["lin"] = lbl
-            else:
-                flags["net"] = lbl
-        sub_dev.columns = [f"{c}_dev" for c in sub_dev.columns]
-        sub_lin.columns = [f"{c}_lin" for c in sub_lin.columns]
-        sub_net.columns = [f"{c}_net" for c in sub_net.columns]
+        targets = {
+            "dev": lbl if "dev" in pick_map[lbl] else "normal",
+            "lin": lbl if "lin" in pick_map[lbl] else "normal",
+            "net": lbl if "net" in pick_map[lbl] else "normal",
+        }
+
+        idx_dev = safe_choice(dev_bins, targets["dev"])
+        idx_lin = safe_choice(linux_bins, targets["lin"])
+        idx_net = safe_choice(net_bins, targets["net"])
+
+        sub_dev = dev_wins[idx_dev].copy()
+        sub_lin = linux_wins[idx_lin].copy()
+        sub_net = network_wins[idx_net].copy()
+
+        temp = pd.DataFrame({
+            "device_label": sub_dev["type"],
+            "linux_label": sub_lin["type"],
+            "network_label": sub_net["type"],
+        })
+        temp["type"] = temp.apply(
+            lambda row: calculFinalLabel(
+                row["device_label"],
+                row["linux_label"],
+                row["network_label"]
+            ),
+            axis=1
+        )
+
+        sub_dev = sub_dev.drop(columns=["type"])
+        sub_lin = sub_lin.drop(columns=["type"])
+        sub_net = sub_net.drop(columns=["type"])
+
         combo = pd.concat([sub_dev, sub_lin, sub_net], axis=1)
-        combo["device_label"] = flags["dev"]
-        combo["linux_label"] = flags["lin"]
-        combo["network_label"] = flags["net"]
-        combo["final_label"] = lbl
+        combo["type"] = temp["type"]
+
         final_dfs.append(combo)
 
     result_df = pd.concat(final_dfs, ignore_index=True)
