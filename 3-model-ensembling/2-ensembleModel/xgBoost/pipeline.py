@@ -4,18 +4,12 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.compose import ColumnTransformer
 from xgboost import XGBClassifier
-from sklearn.base import BaseEstimator, TransformerMixin
 import joblib
-
-class FeatureScaler(BaseEstimator, TransformerMixin):
-    def __init__(self, weight=1.0):
-        self.weight = weight
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        return X * self.weight
+import sys
+from pathlib import Path
+root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(root))
+from customTransformer.featureScaler import FeatureScaler
 
 def main(args):
     df_dev = pd.read_csv(args.devices_csv)
