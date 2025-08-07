@@ -1,8 +1,7 @@
-CREATE DATABASE activity_vectors;
 USE activity_vectors;
 
 CREATE TABLE Activities (
-    activity_id SERIAL PRIMARY KEY,
+    activity_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     activity_timestamp TIMESTAMP NOT NULL,
     predicted VARCHAR(50) NOT NULL CHECK (
         predicted IN (
@@ -13,8 +12,8 @@ CREATE TABLE Activities (
 );
 
 CREATE TABLE Vectors (
-    vector_id SERIAL PRIMARY KEY,
-    activity_id INTEGER NOT NULL,
+    vector_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    activity_id INT UNSIGNED NOT NULL,
     vector_type VARCHAR(20) NOT NULL CHECK (
         vector_type IN ('dev', 'lin', 'net', 'proba')
     ),
@@ -22,8 +21,8 @@ CREATE TABLE Vectors (
 );
 
 CREATE TABLE VectorFeatures (
-    feature_id SERIAL PRIMARY KEY,
-    vector_id INTEGER NOT NULL,
+    feature_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    vector_id INT UNSIGNED NOT NULL,
     label VARCHAR(50) NOT NULL CHECK (
         label IN (
             'backdoor', 'ddos', 'dos', 'injection', 'mitm',

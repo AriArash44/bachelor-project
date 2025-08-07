@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import iotRouter from './routes/iot';
-import uiRouter from './routes/ui';
+import iotRouter from './routes/iot.js';
+import uiRouter from './routes/ui.js';
 
 const app = express();
 const PORT = 8000;
