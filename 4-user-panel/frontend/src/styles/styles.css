@@ -42,6 +42,12 @@
     font-display: swap;
 }
 
+@layer base {
+    h1 {
+        font-size: var(--text-3xl);
+    }
+}
+
 * {
     font-family: spaceGrotesk;
 }
