@@ -4,8 +4,8 @@
     --color-green-200: hsl(147, 39%, 91%);
     --color-neutral-300: hsl(125, 18%, 14%);
     --color-neutral-200: hsl(0, 0%, 47%);
-    --color-neutral-100: hsl(0, 0, 93%);
-    --color-neutral-white: hsl(0, 0, 100%);
+    --color-neutral-100: hsl(0, 0%, 93%);
+    --color-neutral-white: hsl(0, 0%, 100%);
     --color-heat-1: hsl(199, 100%, 18%);
     --color-heat-2: hsl(218, 45%, 34%);
     --color-heat-3: hsl(260, 28%, 44%);
