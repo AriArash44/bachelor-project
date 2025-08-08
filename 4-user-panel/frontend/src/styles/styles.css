@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+    --color-green-200: hsl(147, 39%, 91%);
+    --color-neutral-300: hsl(125, 18%, 14%);
+    --color-neutral-200: hsl(0, 0%, 47%);
+    --color-neutral-100: hsl(0, 0, 93%);
+    --color-neutral-white: hsl(0, 0, 100%);
+    --color-heat-1: hsl(199, 100%, 18%);
+    --color-heat-2: hsl(218, 45%, 34%);
+    --color-heat-3: hsl(260, 28%, 44%);
+    --color-heat-4: hsl(308, 33%, 47%);
+    --color-heat-5: hsl(335, 61%, 57%);
+    --color-heat-6: hsl(355, 93%, 67%);
+    --color-heat-7: hsl(18, 100%, 63%);
+    --color-heat-8: hsl(14, 100%, 57%);
+    --color-heat-9: hsl(1, 77%, 55%);
+    --color-heat-10: hsl(0, 73%, 41%);
+}
+
+@font-face {
+    font-family: "spaceGrotesk";
+    src: url("/fonts/SpaceGrotesk-Light.ttf") format("truetype");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "spaceGrotesk";
+    src: url("/fonts/SpaceGrotesk-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "spaceGrotesk";
+    src: url("/fonts/SpaceGrotesk-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+* {
+    font-family: spaceGrotesk;
+}
