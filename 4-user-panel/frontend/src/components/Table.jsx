@@ -40,7 +40,10 @@ const Table = ({ headers, data, columnWeights }) => {
                   className="cursor-pointer bg-contain bg-no-repeat
                   flex justify-center items-center"
                   onClick={() => {
-                    setDetailsEndpoint(datium[header]);
+                    setDetailsEndpoint(null);
+                    setTimeout(() => {
+                      setDetailsEndpoint(datium[header]);
+                    }, 0);
                   }}
                 >
                   <img src="/images/magnify.png" alt="details" className="h-4 w-4" />
@@ -60,22 +63,22 @@ const Table = ({ headers, data, columnWeights }) => {
             <div
               className="grid"
               style={{
-                gridTemplateColumns: "repeat(11, 20px)",
-                gridTemplateRows: "repeat(11, 20px)",
+                gridTemplateColumns: "110px repeat(10, 20px)",
+                gridTemplateRows: "30px repeat(4, 20px)",
               }}
             >
               <div></div>
               {Object.keys(detailData.dev).map((attackType) => (
                 <div
                   key={attackType + "_label"}
-                  className="text-neutral-300 text-xs font-medium -rotate-45 origin-bottom-left flex items-center justify-center"
+                  className="text-neutral-300 font-medium -rotate-45 origin-bottom-left mb-[24px]"
                 >
                   {attackType}
                 </div>
               ))}
               {["dev", "lin", "net", "proba"].map((deviceKey) => (
                 <React.Fragment key={deviceKey}>
-                  <div className="text-center text-neutral-300 font-medium flex items-center justify-center">
+                  <div className="text-end text-neutral-300 font-medium mt-[-4px] mr-4">
                     {{
                       dev: "devices",
                       lin: "linux",

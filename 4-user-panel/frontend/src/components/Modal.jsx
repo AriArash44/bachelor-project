@@ -22,7 +22,7 @@ export default function Modal({ children }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }} >
       <div
         ref={modalRef}
-        className="bg-white rounded-2xl shadow-lg max-w-md w-full p-12 relative animate-fadeIn"
+        className="bg-white rounded-2xl shadow-lg p-8 pt-18 pr-12 relative animate-fadeIn"
       >
         {children}
       </div>
