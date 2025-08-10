@@ -65,7 +65,7 @@ To validate the robustness of our architecture, we also tested and compared seve
 ## 🎥 Demo
 
 Watch the full system in action in this video:  
-📹 _[./Demo.mp4]_  
+📹 [Live Demo – DeepSecure-IoT system](https://drive.google.com/file/d/1Bm5633KGylr4u-9caWOMZAgPU10ElHrp/view?usp=sharing)  
 
 ---
 
